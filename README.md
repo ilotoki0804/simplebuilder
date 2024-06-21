@@ -1,10 +1,10 @@
 # simplebuilder
 
-A simple build script for packages
+A simple build script for PyPI packages hosted on GitHub
 
 ## Usage
 
-This project is used and will be used by [WebtoonScraper](https://github.com/ilotoki0804/WebtoonScraper) and many other my packages.
+This project is used and will be used by [WebtoonScraper](https://github.com/ilotoki0804/WebtoonScraper) and many other packages.
 
 ## Why it was created
 
