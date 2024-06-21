@@ -27,7 +27,7 @@ pyproject_path = cwd / "pyproject.toml"
 def build_parser():
     parser = argparse.ArgumentParser(
         "simplebuilder",
-        "Simple build script for packages",
+        "Simple build script for packages hosted on GitHub",
     )
     parser.add_argument("--no-readme", action="store_true", help="Delete readme after operation")
     # parser.add_argument("--no-install", action="store_true", help="Don't install current project.")
@@ -68,7 +68,7 @@ def replace_pyproject_version(version: str) -> None:
 
 def build_readme(github_project_url: str, project_name: str, username: str) -> str:
     def make_relative_link_work(match: re.Match) -> str:
-        if match.group("directory_type") == "images":
+        if match.group("directory_type") in {"images", "image"}:
             return (
                 f'[{match.group("description")}]'
                 f'(https://raw.githubusercontent.com/{username}'
@@ -81,7 +81,7 @@ def build_readme(github_project_url: str, project_name: str, username: str) -> s
     long_description = f"**Check lastest version [here]({github_project_url}).**\n"
     long_description += Path("README.md").read_text(encoding="utf-8")
     long_description = re.sub(
-        r"\[(?P<description>.*?)\]\((..\/)*(?P<path>(?P<directory_type>images|docs).*?)\)",
+        r"\[(?P<description>.*?)\]\((..\/)*(?P<path>(?P<directory_type>[^\/]*).*?)\)",
         make_relative_link_work,
         long_description,
     )
