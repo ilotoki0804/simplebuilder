@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "simplebuilder"
+version = "0.2.0"
+description = "Simple build script for packages"
+authors = ["ilotoki0804 <ilotoki0804@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+tomlkit = "^0.12.5"
+
+[tool.poetry.scripts]
+simplebuilder = "simplebuilder.__main__:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
