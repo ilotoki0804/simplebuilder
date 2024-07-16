@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "simplebuilder"
-version = "0.2.0"
+version = "0.3.0"
 description = "Simple build script for packages"
 authors = ["ilotoki0804 <ilotoki0804@gmail.com>"]
 license = "MIT"
