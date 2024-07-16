@@ -32,6 +32,7 @@ def build_parser():
     parser.add_argument("--no-delete-dist", action="store_true", help="Don't delete `dist/` directory.")
     parser.add_argument("--upload", action="store_true", help="Upload project to PyPI. Requires PYPI_TOKEN environment variable.")
     parser.add_argument("--pub", "--publish-mode", "-P", action="store_true", help="shortcut of --no-readme --upload.")
+    parser.add_argument("--branch", "--branch-name", "-B", type=str, default="master", help="Main branch name (usually `main` or `master`).")
     return parser
 
 
@@ -41,10 +42,11 @@ def parse_args(argv=None):
     readme = not args.no_readme
     upload = args.upload
     delete_dist = args.no_delete_dist
+    branch = args.branch
     if args.pub:
         readme = False
         upload = True
-    return readme, upload, delete_dist
+    return readme, upload, delete_dist, branch
 
 
 def load_project_data() -> ProjectData:
@@ -64,15 +66,15 @@ def replace_pyproject_version(version: str) -> None:
     pyproject_path.write_text(tomlkit.dumps(pyproject_data), encoding="utf-8")
 
 
-def build_readme(github_project_url: str, project_name: str, username: str) -> str:
+def build_readme(github_project_url: str, project_name: str, username: str, branch_name: str) -> str:
     def make_relative_link_work(match: re.Match) -> str:
         if match.group("directory_type") in {"images", "image", "img"}:
             return (
                 f'[{match.group("description")}](https://raw.githubusercontent.com/{username}'
-                f'/{project_name}/master/{match.group("path")})'
+                f'/{project_name}/{branch_name}/{match.group("path")})'
             )
 
-        return f'[{match.group("description")}]({github_project_url}/blob/master/{match.group("path")})'
+        return f'[{match.group("description")}]({github_project_url}/blob/{branch_name}/{match.group("path")})'
 
     long_description = f"**Check latest version [here]({github_project_url}).**\n"
     long_description += Path("README.md").read_text(encoding="utf-8")
@@ -94,7 +96,7 @@ def upload_project():
 
 def main(argv=None):
     # parse args
-    readme, upload, delete_dist = parse_args(argv=argv)
+    readme, upload, delete_dist, branch = parse_args(argv=argv)
 
     # get data from pyproject
     project_data = load_project_data()
@@ -118,7 +120,7 @@ def main(argv=None):
             shutil.rmtree("dist")
 
     replace_pyproject_version(version)
-    long_description = build_readme(github_project_url, name, username)
+    long_description = build_readme(github_project_url, name, username, branch)
 
     readme_build = cwd / "README_build.md"
     try:
