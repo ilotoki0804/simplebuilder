@@ -13,8 +13,6 @@ import importlib
 import os
 import re
 import shutil
-import sys
-import warnings
 from pathlib import Path
 
 import tomlkit
@@ -68,20 +66,18 @@ def replace_pyproject_version(version: str) -> None:
 
 def build_readme(github_project_url: str, project_name: str, username: str) -> str:
     def make_relative_link_work(match: re.Match) -> str:
-        if match.group("directory_type") in {"images", "image"}:
+        if match.group("directory_type") in {"images", "image", "img"}:
             return (
-                f'[{match.group("description")}]'
-                f'(https://raw.githubusercontent.com/{username}'
-                f'/{project_name}/master/'
-                f'{match.group("path")})'
+                f'[{match.group("description")}](https://raw.githubusercontent.com/{username}'
+                f'/{project_name}/master/{match.group("path")})'
             )
 
-        return f'[{match.group("description")}]' f'({github_project_url}/blob/master/{match.group("path")})'
+        return f'[{match.group("description")}]({github_project_url}/blob/master/{match.group("path")})'
 
-    long_description = f"**Check lastest version [here]({github_project_url}).**\n"
+    long_description = f"**Check latest version [here]({github_project_url}).**\n"
     long_description += Path("README.md").read_text(encoding="utf-8")
     long_description = re.sub(
-        r"\[(?P<description>.*?)\]\((..\/)*(?P<path>(?P<directory_type>[^\/]*).*?)\)",
+        r"\[(?P<description>.*?)\]\(((\.\.\/)+|\.\/)(?P<path>(?P<directory_type>[^\/]*).*?)\)",
         make_relative_link_work,
         long_description,
     )
