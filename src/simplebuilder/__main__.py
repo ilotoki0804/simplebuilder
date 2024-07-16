@@ -100,7 +100,7 @@ def main(argv=None):
 
     # get data from pyproject
     project_data = load_project_data()
-    build_data = project_data.get("tool", {}).get("simplebuild", {})
+    build_data = project_data.get("tool", {}).get("simplebuilder", {})
     name = (
         project_data.get("project", {}).get("name")
         or project_data.get("tool", {}).get("poetry", {}).get("name")
