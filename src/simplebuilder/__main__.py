@@ -36,19 +36,6 @@ def build_parser():
     return parser
 
 
-def parse_args(argv=None):
-    parser = build_parser()
-    args = parser.parse_args(argv)
-    readme = not args.no_readme
-    upload = args.upload
-    delete_dist = args.no_delete_dist
-    branch = args.branch
-    if args.pub:
-        readme = False
-        upload = True
-    return readme, upload, delete_dist, branch
-
-
 def load_project_data() -> ProjectData:
     return tomlkit.parse(pyproject_path.read_text())
 
@@ -96,7 +83,15 @@ def upload_project():
 
 def main(argv=None):
     # parse args
-    readme, upload, delete_dist, branch = parse_args(argv=argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    readme = not args.no_readme
+    upload = args.upload
+    delete_dist = args.no_delete_dist
+    branch = args.branch
+    if args.pub:
+        readme = False
+        upload = True
 
     # get data from pyproject
     project_data = load_project_data()
