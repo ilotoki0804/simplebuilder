@@ -1,10 +1,10 @@
-[tool.poetry]
+[project]
 name = "simplebuilder"
-version = "0.3.0"
+version = "0.4.0"
 description = "Simple build script for packages"
-authors = ["ilotoki0804 <ilotoki0804@gmail.com>"]
-license = "MIT"
+authors = [{ name = "ilotoki0804", email = "ilotoki0804@gmail.com" }]
 readme = "README.md"
+requires-python = ">=3.8"
 keywords = [
     "build",
 ]
@@ -18,18 +18,17 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
+dependencies = [
+    "tomlkit>=0.13.2",
+]
 
-[tool.poetry.dependencies]
-python = "^3.8"
-tomlkit = "^0.12.5"
-
-[tool.poetry.scripts]
+[project.scripts]
 simplebuilder = "simplebuilder.__main__:main"
 
-[tool.poetry.urls]
+[project.urls]
 Repository = "https://github.com/ilotoki0804/simplebuilder"
 Issues = "https://github.com/ilotoki0804/simplebuilder/issues"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
