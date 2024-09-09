@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import argparse
 import contextlib
-import importlib
 import os
 import re
 import shutil
@@ -27,12 +26,8 @@ def build_parser():
         "simplebuilder",
         "Simple build script for packages hosted on GitHub",
     )
-    parser.add_argument("--no-readme", action="store_true", help="Delete readme after operation")
-    # parser.add_argument("--no-install", action="store_true", help="Don't install current project.")
-    parser.add_argument("--no-delete-dist", action="store_true", help="Don't delete `dist/` directory.")
-    parser.add_argument("--upload", action="store_true", help="Upload project to PyPI. Requires PYPI_TOKEN environment variable.")
-    parser.add_argument("--pub", "--publish-mode", "-P", action="store_true", help="shortcut of --no-readme --upload.")
-    parser.add_argument("--branch", "--branch-name", "-B", type=str, default="master", help="Main branch name (usually `main` or `master`).")
+    parser.add_argument("--preserve-dist", action="store_true", help="Don't delete `dist/` directory.")
+    parser.add_argument("--branch", "--branch-name", "-B", type=str, default=None, help="Main branch name (usually `main` or `master`).")
     return parser
 
 
@@ -47,15 +42,9 @@ def match_url(url: str) -> tuple[str, str]:
     return result["user"], result["project"]
 
 
-def replace_pyproject_version(version: str) -> None:
-    pyproject_data = load_project_data()
-    pyproject_data["tool"]["poetry"]["version"] = version  # type: ignore
-    pyproject_path.write_text(tomlkit.dumps(pyproject_data), encoding="utf-8")
-
-
 def build_readme(github_project_url: str, project_name: str, username: str, branch_name: str) -> str:
     def make_relative_link_work(match: re.Match) -> str:
-        if match.group("directory_type") in {"images", "image", "img"}:
+        if match.group("img"):
             return (
                 f'[{match.group("description")}](https://raw.githubusercontent.com/{username}'
                 f'/{project_name}/{branch_name}/{match.group("path")})'
@@ -66,7 +55,7 @@ def build_readme(github_project_url: str, project_name: str, username: str, bran
     long_description = f"**Check latest version [here]({github_project_url}).**\n"
     long_description += Path("README.md").read_text(encoding="utf-8")
     long_description = re.sub(
-        r"\[(?P<description>.*?)\]\(((\.\.\/)+|\.\/)(?P<path>(?P<directory_type>[^\/]*).*?)\)",
+        r"(?P<img>!?)\[(?P<description>.*?)\]\(((?:\.\.\/)+|\.\/|\/)(?P<path>.*?)\)",
         make_relative_link_work,
         long_description,
     )
@@ -81,29 +70,30 @@ def upload_project():
     os.system(f'poetry publish -u __token__ -p {os.environ["PYPI_TOKEN"]}')
 
 
+def get_default_branch_name():
+    # very error-prone
+    head_file = cwd / ".git" / "HEAD"
+    content = head_file.read_text("utf-8")
+    if "master" in content:
+        return "master"
+    if "main" in content:
+        return "main"
+    return None
+
+
 def main(argv=None):
     # parse args
     parser = build_parser()
     args = parser.parse_args(argv)
-    readme = not args.no_readme
-    upload = args.upload
-    delete_dist = args.no_delete_dist
+    delete_dist = args.preserve_dist
     branch = args.branch
-    if args.pub:
-        readme = False
-        upload = True
 
     # get data from pyproject
     project_data = load_project_data()
-    build_data = project_data.get("tool", {}).get("simplebuilder", {})
-    name = (
-        project_data.get("project", {}).get("name")
-        or project_data.get("tool", {}).get("poetry", {}).get("name")
-        # or cwd.name
-    )
-    project = importlib.import_module(name)
-    url = build_data.get("github_url") or project.__url__
-    version = project.__version__
+    # build_data = project_data.get("tool", {}).get("simplebuilder", {})
+    name = project_data["project"]["name"]
+    url = project_data["project"]["urls"]["Repository"]
+    branch = branch or get_default_branch_name() or "master"
 
     # construct github project url
     username, project_name = match_url(url)
@@ -114,20 +104,10 @@ def main(argv=None):
         with contextlib.suppress(FileNotFoundError):
             shutil.rmtree("dist")
 
-    replace_pyproject_version(version)
     long_description = build_readme(github_project_url, name, username, branch)
 
-    readme_build = cwd / "README_build.md"
-    try:
-        readme_build.write_text(long_description, encoding="utf-8")
-
-        os.system("poetry build")
-        if upload:
-            upload_project()
-    finally:
-        if not readme:
-            with contextlib.suppress(FileNotFoundError):
-                os.remove(readme_build)
+    readme_build = cwd / "README-build.md"
+    readme_build.write_text(long_description, encoding="utf-8")
 
 
 if __name__ == "__main__":
