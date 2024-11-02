@@ -17,10 +17,18 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Framework :: Hatch",
 ]
 dependencies = [
+    "hatch>=1.13.0",
     "tomlkit>=0.13.2",
 ]
+
+[project.entry-points.hatch]
+simplebuilder = "simplebuilder.hook"
+
+# [tool.hatch.build.targets.wheel.hooks.myplugin]
+[tool.hatch.build.hooks.simplebuilder]
 
 [project.scripts]
 simplebuilder = "simplebuilder.__main__:main"
@@ -32,3 +40,11 @@ Issues = "https://github.com/ilotoki0804/simplebuilder/issues"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "simplebuilder",
+]
+
+[tool.uv.sources]
+simplebuilder = { workspace = true }
